@@ -3,7 +3,7 @@ from datetime import date
 
 # For MongoDB connection
 DB_NAME = "Vehicle-INS"
-DB_COLLECTION_NAME = "Vehicle-Cluster"
+DB_COLLECTION_NAME = "Vehicle-Cluster" 
 DB_CONNECTION_URL = "mongodb+srv://Vehicle-Cluster:mXSkZG3dtni6MGHJ@vehicle-cluster.phc9uz5.mongodb.net/?appName=Vehicle-Cluster"
 
 
@@ -30,7 +30,7 @@ REGION_NAME = "us-east-1"
 """
 Data Ingestion related constant start with DATA_INGESTION VAR NAME
 """
-DATA_INGESTION_COLLECTION_NAME: str = "Proj1-Data"
+DATA_INGESTION_COLLECTION_NAME: str = "Vehicle-Cluster"
 DATA_INGESTION_DIR_NAME: str = "data_ingestion"
 DATA_INGESTION_FEATURE_STORE_DIR: str = "feature_store"
 DATA_INGESTION_INGESTED_DIR: str = "ingested"

@@ -8,11 +8,10 @@ from src.entity.config_entity import DataIngestionConfig
 from src.entity.artifact_entity import DataIngestionArtifact
 from src.exception import MyException
 from src.logger import logging
-from src.data_access.proj1_data import Proj1Data
+from src.data_access.proj1_data import Vehicle_INS
 
 class DataIngestion:
     def __init__(self,data_ingestion_config:DataIngestionConfig=DataIngestionConfig()):
-
         try:
             self.data_ingestion_config = data_ingestion_config
         except Exception as e:
@@ -20,16 +19,10 @@ class DataIngestion:
         
 
     def export_data_into_feature_store(self)->DataFrame:
-        """
-        Method Name :   export_data_into_feature_store
-        Description :   This method exports data from mongodb to csv file
-        
-        Output      :   data is returned as artifact of data ingestion components
-        On Failure  :   Write an exception log and then raise an exception
-        """
+
         try:
             logging.info(f"Exporting data from mongodb")
-            my_data = Proj1Data()
+            my_data = Vehicle_INS()
             dataframe = my_data.export_collection_as_dataframe(collection_name=
                                                                    self.data_ingestion_config.collection_name)
             logging.info(f"Shape of dataframe: {dataframe.shape}")
@@ -44,13 +37,7 @@ class DataIngestion:
             raise MyException(e,sys)
 
     def split_data_as_train_test(self,dataframe: DataFrame) ->None:
-        """
-        Method Name :   split_data_as_train_test
-        Description :   This method splits the dataframe into train set and test set based on split ratio 
         
-        Output      :   Folder is created in s3 bucket
-        On Failure  :   Write an exception log and then raise an exception
-        """
         logging.info("Entered split_data_as_train_test method of Data_Ingestion class")
 
         try:
@@ -71,13 +58,7 @@ class DataIngestion:
             raise MyException(e, sys) from e
 
     def initiate_data_ingestion(self) ->DataIngestionArtifact:
-        """
-        Method Name :   initiate_data_ingestion
-        Description :   This method initiates the data ingestion components of training pipeline 
-        
-        Output      :   train set and test set are returned as the artifacts of data ingestion components
-        On Failure  :   Write an exception log and then raise an exception
-        """
+
         logging.info("Entered initiate_data_ingestion method of Data_Ingestion class")
 
         try:
