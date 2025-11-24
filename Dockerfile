@@ -1,11 +1,19 @@
+# Use official Python slim image
 FROM python:3.10-slim-buster
 
+# Set working directory
 WORKDIR /app
 
+# Copy project files
 COPY . /app
 
-RUN pip install -r requirements.txt
+# Remove leftover .egg-info, upgrade pip, then install requirements
+RUN rm -rf *.egg-info \
+    && pip install --upgrade pip \
+    && pip install -r requirements.txt
 
+# Expose port
 EXPOSE 5000
 
+# Run the application
 CMD ["python3", "app.py"]
