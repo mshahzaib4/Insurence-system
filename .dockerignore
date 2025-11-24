@@ -1,11 +1,41 @@
-artifact
-venv
-env
+# Virtual environments
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Egg metadata (THIS FIXES YOUR DOCKER ERROR)
+*.egg-info/
+
+# Logs
+logs/
+*.log
+
+# Notebooks
+notebook/
+*.ipynb
+
+# Build / artifact directories
+artifact/
+build/
+dist/
+
+# Git files
+.git/
 .gitignore
-logs
+
+# Local config
+.env
+.env.*
+*.env
+
+# Ignore these scripts
 template.py
 demo.py
+
+# Project docs (not needed in Docker image)
 README.md
 LICENSE
-src.egg.-info
-notebook
