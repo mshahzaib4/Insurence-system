@@ -5,12 +5,15 @@ on:
     branches: [main]
 
 jobs:
+  # -------------------------------
+  # Continuous Integration (CI)
+  # -------------------------------
   Continuous-Integration:
     runs-on: ubuntu-latest
     outputs:
       image: ${{ steps.build-image.outputs.image }}
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
@@ -24,7 +27,7 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
+      - name: Build, tag, and push Docker image
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -37,14 +40,17 @@ jobs:
           echo "Pushing Docker image to ECR..."
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           
-          # Output the full image URI for the deployment job
+          # Save full image URI as output for CD job
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+  # -------------------------------
+  # Continuous Deployment (CD)
+  # -------------------------------
   Continuous-Deployment:
     needs: Continuous-Integration
     runs-on: self-hosted
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Configure AWS credentials
@@ -57,16 +63,20 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Run Docker Image to serve users
+      - name: Pull and run Docker image
         run: |
           IMAGE=${{ needs.Continuous-Integration.outputs.image }}
-          
+
+          # Safety check
           if [ -z "$IMAGE" ]; then
             echo "ERROR: Docker image URI is empty. Deployment cannot continue."
             exit 1
           fi
-          
-          echo "Running Docker image: $IMAGE"
+
+          echo "Pulling Docker image: $IMAGE"
+          docker pull $IMAGE
+
+          echo "Running Docker container..."
           docker run -d \
             -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
