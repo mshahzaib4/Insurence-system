@@ -1,36 +1,16 @@
-# Use official Python slim image
-FROM python:3.10-slim-buster
+FROM python:3.10-slim-buster AS builder
 
-# Prevent Python from writing .pyc files and buffering stdout/stderr
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-
-# Set working directory
 WORKDIR /app
 
-# Install system dependencies needed for building some Python packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
-        build-essential \
-        gcc \
-        libffi-dev \
-        libssl-dev \
-        && rm -rf /var/lib/apt/lists/*
+RUN pip install --upgrade pip
+COPY requirements.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
 
-# Copy only requirements first for caching
-COPY requirements.txt /app/requirements.txt
+FROM python:3.10-slim-buster
+WORKDIR /app
 
-# Upgrade pip and install Python dependencies
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+COPY --from=builder /install /usr/local
+COPY . .
 
-# Copy project files
-COPY . /app
-
-# Remove leftover .egg-info if any
-RUN find . -name "*.egg-info" -exec rm -rf {} +
-
-# Expose port
 EXPOSE 5000
-
-# Run the application
 CMD ["python3", "app.py"]
