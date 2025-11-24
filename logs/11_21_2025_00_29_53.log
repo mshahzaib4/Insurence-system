@@ -1,0 +1,2 @@
+[ 2025-11-21 00:29:54,240 ] numexpr.utils - INFO - NumExpr defaulting to 4 threads.
+[ 2025-11-21 00:30:00,636 ] asyncio - DEBUG - Using selector: SelectSelector
