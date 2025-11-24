@@ -1,73 +1,59 @@
-name: CI-CD Pipeline
+name: Docker Build & Deploy
 
-# Trigger on push to main or on pull requests
 on:
   push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    branches:
+      - main   # Trigger workflow on push to main branch
+
+env:
+  AWS_REGION: us-east-1            # Change to your AWS region
+  ECR_REPOSITORY: my-app           # Your ECR repository name
+  IMAGE_TAG: latest                 # Docker image tag
 
 jobs:
-  # -------------------------------
-  # Continuous Integration
-  # -------------------------------
-  ci:
-    name: Continuous Integration
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      # 1. Checkout the repository
+      - name: Checkout repo
         uses: actions/checkout@v3
 
+      # 2. Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+          aws-region: ${{ env.AWS_REGION }}
 
+      # 3. Login to Amazon ECR
       - name: Login to Amazon ECR
         id: ecr-login
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push Docker image
-        env:
-          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPO }}
-          IMAGE_TAG: latest
+      # 4. Set IMAGE_URI environment variable
+      - name: Set image URI
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "IMAGE_URI=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
+          echo "IMAGE_URI=${{ steps.ecr-login.outputs.registry }}/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_ENV
 
-  # -------------------------------
-  # Continuous Deployment
-  # -------------------------------
-  cd:
-    name: Continuous Deployment
-    runs-on: ubuntu-latest
-    needs: ci   # waits for CI job to finish
+      # 5. Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_URI .
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      # 6. Push Docker image to ECR
+      - name: Push Docker image to ECR
+        run: |
+          docker push $IMAGE_URI
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
-
-      - name: Pull and run Docker image
-        env:
-          IMAGE_URI: ${{ env.IMAGE_URI }}
-          MONGODB_URL: ${{ secrets.MONGODB_URL }}
+      # 7. (Optional) Pull Docker image to test
+      - name: Pull Docker image
         run: |
           docker pull $IMAGE_URI
-          docker run -d \
-            -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
-            -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
-            -e AWS_DEFAULT_REGION="${{ secrets.AWS_DEFAULT_REGION }}" \
-            -e MONGODB_URL="$MONGODB_URL" \
-            -p 5000:5000 $IMAGE_URI
+
+      # 8. (Optional) Display pushed image info
+      - name: Show pushed image info
+        run: |
+          echo "Docker image pushed: $IMAGE_URI"
+            
