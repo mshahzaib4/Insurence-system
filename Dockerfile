@@ -8,9 +8,10 @@ WORKDIR /app
 COPY . /app
 
 # Remove leftover .egg-info, upgrade pip, then install requirements
-RUN rm -rf *.egg-info \
+RUN find . -name "*.egg-info" -exec rm -rf {} + \
     && pip install --upgrade pip \
     && pip install -r requirements.txt
+
 
 # Expose port
 EXPOSE 5000
